@@ -1,0 +1,41 @@
+import Link from "next/link";
+
+interface ProductProps {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string | null;
+  categoryName?: string | null;
+}
+
+export function ProductCard({ id, name, price, imageUrl, categoryName }: ProductProps) {
+  return (
+    <Link href={`/product/${id}`} className="group block focus:outline-none">
+      <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden mb-3 relative shadow-sm border border-gray-100">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+            Sin imagen
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      {categoryName && (
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#26140b]/70 mb-1">
+          {categoryName}
+        </p>
+      )}
+      <h3 className="font-semibold text-sm text-[#26140b] line-clamp-1 group-hover:opacity-80 transition-opacity">
+        {name}
+      </h3>
+      <p className="font-bold mt-1 text-base text-[#26140b]">
+        ${price.toLocaleString("es-AR")}
+      </p>
+    </Link>
+  );
+}
