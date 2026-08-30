@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ProductPurchaseActions } from "@/components/ProductPurchaseActions";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;
   const product = await prisma.product.findUnique({
