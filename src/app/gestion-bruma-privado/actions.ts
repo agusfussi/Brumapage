@@ -10,9 +10,13 @@ import crypto from "crypto";
 
 export async function loginAction(formData: FormData) {
   const password = formData.get("password") as string;
-  const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'bruma123';
+  const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
-  if (password === ADMIN_TOKEN) {
+  if (!ADMIN_TOKEN) {
+    return { error: "El token de administrador no está configurado en las variables de entorno." };
+  }
+
+  if (password && password === ADMIN_TOKEN) {
     const cookieStore = await cookies();
     cookieStore.set("admin_session", ADMIN_TOKEN, {
       httpOnly: true,
