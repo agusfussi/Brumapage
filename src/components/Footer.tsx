@@ -77,14 +77,22 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Information & Copyright */}
+          {/* Information, Copyright & Developer Credit */}
           <div className="text-center md:text-right space-y-1 text-xs text-[#26140b]/70">
             <p className="flex items-center justify-center md:justify-end gap-1">
               Catálogo oficial de Bruma <Heart className="w-3 h-3 fill-current text-[#26140b]" />
             </p>
             <p>© {new Date().getFullYear()} Bruma. Todos los derechos reservados.</p>
-            <p className="text-[11px] text-[#26140b]/50">
-              Coordinación de compras por mensaje directo de Instagram
+            <p className="text-[11px] text-[#26140b]/60 pt-1">
+              Sitio web creado por{" "}
+              <a
+                href="https://www.instagram.com/aguss_fussi/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline hover:text-[#26140b] transition-colors"
+              >
+                @aguss_fussi
+              </a>
             </p>
           </div>
         </div>
