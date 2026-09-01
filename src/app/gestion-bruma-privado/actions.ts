@@ -4,9 +4,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { writeFile } from "fs/promises";
-import path from "path";
-import crypto from "crypto";
 
 export async function loginAction(formData: FormData) {
   const rawPassword = formData.get("password") as string;
@@ -41,16 +38,22 @@ export async function logoutAction() {
   redirect("/gestion-bruma-privado/login");
 }
 
-async function saveImage(file: File | null): Promise<string | null> {
-  if (!file || file.size === 0) return null;
-  
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = path.extname(file.name) || '.jpg';
-  const filename = `${crypto.randomBytes(8).toString('hex')}${ext}`;
-  const filepath = path.join(process.cwd(), 'public', 'uploads', filename);
-  
-  await writeFile(filepath, buffer);
-  return `/uploads/${filename}`;
+async function processImage(formData: FormData): Promise<string | null> {
+  // 1. Check if client-side optimized base64 payload is provided
+  const base64Payload = formData.get("imageBase64") as string;
+  if (base64Payload && base64Payload.startsWith("data:image")) {
+    return base64Payload;
+  }
+
+  // 2. Fallback: Convert raw uploaded File to base64 Data URL (serverless safe, no disk writes)
+  const file = formData.get("imageFile") as File | null;
+  if (file && file.size > 0) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const mimeType = file.type || "image/jpeg";
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  }
+
+  return null;
 }
 
 export async function createProductAction(formData: FormData) {
@@ -67,8 +70,8 @@ export async function createProductAction(formData: FormData) {
   const features = (formData.get("features") as string)?.trim();
   const categoryId = (formData.get("categoryId") as string) || null;
   
-  const imageFile = formData.get("imageFile") as File | null;
-  const imageUrl = await saveImage(imageFile);
+  // Store image safely in cloud database as Data URL
+  const imageUrl = await processImage(formData);
 
   await prisma.product.create({
     data: { name, description, price, stock, features, imageUrl, categoryId },
@@ -93,8 +96,7 @@ export async function updateProductAction(id: string, formData: FormData) {
   const features = (formData.get("features") as string)?.trim();
   const categoryId = (formData.get("categoryId") as string) || null;
   
-  const imageFile = formData.get("imageFile") as File | null;
-  const newImageUrl = await saveImage(imageFile);
+  const newImageUrl = await processImage(formData);
 
   const dataToUpdate: any = { name, description, price, stock, features, categoryId };
   if (newImageUrl) {

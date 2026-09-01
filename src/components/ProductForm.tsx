@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, ChangeEvent } from "react";
 import { createProductAction, updateProductAction } from "@/app/gestion-bruma-privado/actions";
 import Link from "next/link";
+import { Image as ImageIcon, Upload } from "lucide-react";
 
 type Product = {
   id?: string;
@@ -22,18 +23,77 @@ type Category = {
 
 export function ProductForm({ product, categories = [] }: { product?: Product, categories?: Category[] }) {
   const isEditing = !!product?.id;
+  const [previewImage, setPreviewImage] = useState<string | null>(product?.imageUrl || null);
+  const [imageBase64, setImageBase64] = useState<string>("");
+  const [isCompressing, setIsCompressing] = useState(false);
   
   const action = isEditing 
     ? updateProductAction.bind(null, product.id!) 
     : createProductAction;
 
   const [state, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
+    // If we have an optimized base64 string, attach it
+    if (imageBase64) {
+      formData.set("imageBase64", imageBase64);
+    }
     await action(formData);
     return null;
   }, null);
 
+  // Client-side image optimizer using Canvas
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsCompressing(true);
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to max 1000px dimension
+        const maxDim = 1000;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          setPreviewImage(compressedDataUrl);
+          setImageBase64(compressedDataUrl);
+        } else {
+          const directDataUrl = readerEvent.target?.result as string;
+          setPreviewImage(directDataUrl);
+          setImageBase64(directDataUrl);
+        }
+        setIsCompressing(false);
+      };
+      img.src = readerEvent.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <form action={formAction} className="bg-white p-6 rounded-lg shadow max-w-2xl border border-gray-100" encType="multipart/form-data">
+      <input type="hidden" name="imageBase64" value={imageBase64} />
+
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1 text-[#26140b]">Nombre del Producto</label>
@@ -105,22 +165,43 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
           </select>
         </div>
 
+        {/* Image Upload with Live Preview */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#26140b]">Imagen del Producto</label>
-          {product?.imageUrl && (
-            <div className="mb-2 text-sm text-[#26140b]/80">
-              Imagen actual: <img src={product.imageUrl} alt="Actual" className="w-16 h-16 object-cover rounded mt-1 border" />
+          
+          <div className="flex items-center gap-4 my-2">
+            {previewImage ? (
+              <div className="w-24 h-24 border-2 border-dashed border-[#26140b]/30 rounded-lg overflow-hidden relative shadow-sm">
+                <img
+                  src={previewImage}
+                  alt="Vista previa"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
+                <span className="text-[10px]">Sin foto</span>
+              </div>
+            )}
+
+            <div className="flex-1">
+              <label className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-[#26140b] bg-white hover:bg-gray-50 cursor-pointer">
+                <Upload className="w-4 h-4 text-[#26140b]" />
+                <span>{previewImage ? "Cambiar foto" : "Subir foto desde tu PC"}</span>
+                <input 
+                  type="file" 
+                  name="imageFile" 
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden" 
+                />
+              </label>
+              <p className="text-xs text-[#26140b]/60 mt-1.5">
+                {isCompressing ? "Optimizando foto..." : "Formatos soportados: JPG, PNG, WEBP."}
+              </p>
             </div>
-          )}
-          <input 
-            type="file" 
-            name="imageFile" 
-            accept="image/*"
-            className="w-full border rounded p-2 text-sm" 
-          />
-          <p className="text-xs text-[#26140b]/60 mt-1">
-            {isEditing ? "Dejá este campo vacío si no querés cambiar la imagen actual." : "Subí una foto desde tu computadora."}
-          </p>
+          </div>
         </div>
 
         <div>
@@ -147,7 +228,7 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
         </Link>
         <button 
           type="submit" 
-          disabled={isPending}
+          disabled={isPending || isCompressing}
           className="px-5 py-2 bg-[#26140b] text-white font-medium rounded hover:opacity-90 disabled:opacity-50 text-sm shadow-sm"
         >
           {isPending ? "Guardando..." : "Guardar Producto"}
