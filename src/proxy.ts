@@ -19,6 +19,8 @@ export default function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/gestion-bruma-privado', request.url));
     }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
