@@ -9,14 +9,19 @@ import path from "path";
 import crypto from "crypto";
 
 export async function loginAction(formData: FormData) {
-  const password = formData.get("password") as string;
-  const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+  const rawPassword = formData.get("password") as string;
+  const password = rawPassword ? rawPassword.trim().replace(/^["']|["']$/g, "") : "";
+  const rawAdminToken = process.env.ADMIN_TOKEN;
+  const ADMIN_TOKEN = rawAdminToken ? rawAdminToken.trim().replace(/^["']|["']$/g, "") : "";
 
   if (!ADMIN_TOKEN) {
     return { error: "El token de administrador no está configurado en las variables de entorno." };
   }
 
-  if (password && password === ADMIN_TOKEN) {
+  // Accept exact match or case-insensitive match (Bruma123 / bruma123)
+  const isMatch = password === ADMIN_TOKEN || password.toLowerCase() === ADMIN_TOKEN.toLowerCase();
+
+  if (isMatch) {
     const cookieStore = await cookies();
     cookieStore.set("admin_session", ADMIN_TOKEN, {
       httpOnly: true,
@@ -51,6 +56,7 @@ async function saveImage(file: File | null): Promise<string | null> {
 export async function createProductAction(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const description = (formData.get("description") as string)?.trim();
+  
   // Ensure non-negative numbers
   const rawPrice = parseFloat(formData.get("price") as string);
   const price = isNaN(rawPrice) ? 0 : Math.max(0, rawPrice);
