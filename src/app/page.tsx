@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/ProductCard";
+import { HeroBanner } from "@/components/HeroBanner";
 import { prisma } from "@/lib/prisma";
 
 // Force dynamic rendering
@@ -20,29 +21,25 @@ export default async function Home() {
     products = [];
   }
 
+  // Extract all available product images for the hero carousel background
+  const heroImages = products
+    .map((p) => p.imageUrl)
+    .filter((url): url is string => Boolean(url));
+
   return (
     <div className="flex flex-col">
-      {/* Banner hero */}
-      <section className="bg-[#f4f0eb] h-64 md:h-96 w-full flex items-center justify-center relative">
-        <div className="text-center z-10 px-4">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
-            Nueva Colección
-          </h1>
-          <p className="text-lg md:text-xl">
-            Descubrí los accesorios que marcan tendencia.
-          </p>
-        </div>
-      </section>
+      {/* Hero Banner with Glam Code and blurred product carousel */}
+      <HeroBanner images={heroImages} />
 
       {/* Product Grid */}
       <section className="container mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold mb-8 text-center uppercase tracking-wider">
+        <h2 className="text-2xl font-bold mb-8 text-center uppercase tracking-wider text-[#26140b]">
           Todos los Productos
         </h2>
         
         {products.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-lg font-semibold">Próximamente...</p>
+            <p className="text-lg font-semibold text-[#26140b]">Próximamente...</p>
             <p className="text-sm text-[#26140b]/70 mt-1">Aún no hay productos disponibles en el catálogo.</p>
           </div>
         ) : (
