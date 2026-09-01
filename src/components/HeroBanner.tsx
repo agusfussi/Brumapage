@@ -37,13 +37,13 @@ export function HeroBanner({ images }: HeroBannerProps) {
               <img
                 src={imgUrl}
                 alt=""
-                className="w-full h-full object-cover scale-110 blur-xl md:blur-2xl"
+                className="w-full h-full object-cover scale-105 blur-[6px] md:blur-[8px]"
               />
             </div>
           ))}
 
           {/* Warm Tint & Gradient Overlay for perfect text contrast */}
-          <div className="absolute inset-0 bg-[#f4f0eb]/75 md:bg-[#f4f0eb]/70 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-[#f4f0eb]/55 md:bg-[#f4f0eb]/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#f4f0eb] via-transparent to-transparent opacity-80" />
         </div>
       ) : null}
