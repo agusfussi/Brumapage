@@ -60,24 +60,6 @@ export function HeroBanner({ images }: HeroBannerProps) {
           Descubrí los accesorios que marcan tendencia.
         </p>
       </div>
-
-      {/* Carousel Indicator Dots */}
-      {images.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-center gap-1.5">
-          {images.map((_, dotIndex) => (
-            <button
-              key={dotIndex}
-              onClick={() => setCurrentIndex(dotIndex)}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                dotIndex === currentIndex
-                  ? "w-6 bg-[#26140b]"
-                  : "w-1.5 bg-[#26140b]/30 hover:bg-[#26140b]/60"
-              }`}
-              aria-label={`Ir a imagen ${dotIndex + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 }
