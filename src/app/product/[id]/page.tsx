@@ -25,7 +25,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-        <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden shadow-sm">
+        <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden shadow-sm relative">
+          {product.stock <= 0 && (
+            <span className="absolute top-3 left-3 z-10 bg-[#26140b]/80 backdrop-blur-sm text-white text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm select-none">
+              Agotado
+            </span>
+          )}
           {product.imageUrl ? (
             <img
               src={product.imageUrl}

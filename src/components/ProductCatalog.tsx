@@ -12,6 +12,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  stock: number;
   imageUrl?: string | null;
   categoryId?: string | null;
   category?: {
@@ -103,6 +104,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
               id={product.id}
               name={product.name}
               price={product.price}
+              stock={product.stock}
               imageUrl={product.imageUrl}
               categoryName={product.category?.name}
             />
