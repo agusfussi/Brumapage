@@ -7,20 +7,25 @@ interface ProductProps {
   stock?: number;
   imageUrl?: string | null;
   categoryName?: string | null;
+  isNew?: boolean;
 }
 
-export function ProductCard({ id, name, price, stock, imageUrl, categoryName }: ProductProps) {
+export function ProductCard({ id, name, price, stock, imageUrl, categoryName, isNew }: ProductProps) {
   const isOutOfStock = stock !== undefined && stock <= 0;
 
   return (
     <Link href={`/product/${id}`} className="group block focus:outline-none">
       <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden mb-3 relative shadow-sm border border-gray-100">
-        {/* Subtle Out of Stock badge */}
-        {isOutOfStock && (
+        {/* Subtle Status Badges */}
+        {isOutOfStock ? (
           <span className="absolute top-2 left-2 z-10 bg-[#26140b]/80 backdrop-blur-sm text-white text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded shadow-sm select-none">
             Agotado
           </span>
-        )}
+        ) : isNew ? (
+          <span className="absolute top-2 left-2 z-10 bg-white/95 backdrop-blur-sm text-[#26140b] text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded shadow-sm border border-[#26140b]/15 select-none">
+            Nuevo
+          </span>
+        ) : null}
 
         {imageUrl ? (
           <img

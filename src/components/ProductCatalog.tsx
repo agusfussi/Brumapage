@@ -15,6 +15,8 @@ interface Product {
   stock: number;
   imageUrl?: string | null;
   categoryId?: string | null;
+  createdAt?: Date | string;
+  isNew?: boolean;
   category?: {
     id: string;
     name: string;
@@ -98,17 +100,24 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              stock={product.stock}
-              imageUrl={product.imageUrl}
-              categoryName={product.category?.name}
-            />
-          ))}
+          {filteredProducts.map((product) => {
+            const isNew = product.isNew !== undefined
+              ? product.isNew
+              : (product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false);
+
+            return (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={product.price}
+                stock={product.stock}
+                imageUrl={product.imageUrl}
+                categoryName={product.category?.name}
+                isNew={isNew}
+              />
+            );
+          })}
         </div>
       )}
     </section>

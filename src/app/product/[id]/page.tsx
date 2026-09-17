@@ -17,6 +17,8 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
     notFound();
   }
 
+  const isNew = product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link href="/" className="inline-flex items-center gap-2 text-sm hover:opacity-80 mb-8 font-medium">
@@ -26,11 +28,15 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden shadow-sm relative">
-          {product.stock <= 0 && (
+          {product.stock <= 0 ? (
             <span className="absolute top-3 left-3 z-10 bg-[#26140b]/80 backdrop-blur-sm text-white text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm select-none">
               Agotado
             </span>
-          )}
+          ) : isNew ? (
+            <span className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm text-[#26140b] text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm border border-[#26140b]/15 select-none">
+              Nuevo
+            </span>
+          ) : null}
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
