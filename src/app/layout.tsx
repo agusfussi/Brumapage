@@ -45,12 +45,28 @@ export const metadata: Metadata = {
     "tienda online",
   ],
   authors: [{ name: "Bruma" }],
-  creator: "Bruma",
+  icons: {
+    icon: [
+      { url: "/icon.jpg", type: "image/jpeg" },
+      { url: "/favicon.ico" },
+      { url: "/logo.jpg", type: "image/jpeg" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.jpg",
+  },
   openGraph: {
     title: "Bruma | Joyas y Accesorios",
     description: "Tienda online de joyas y accesorios de moda en acero blanco, acero dorado y plata 925.",
     url: "https://bruuma.netlify.app",
     siteName: "Bruma",
+    images: [
+      {
+        url: "/logo.jpg",
+        width: 800,
+        height: 800,
+        alt: "Bruma Joyas y Accesorios",
+      },
+    ],
     locale: "es_AR",
     type: "website",
   },
@@ -58,6 +74,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bruma | Joyas y Accesorios",
     description: "Tienda online de joyas y accesorios de moda en acero blanco, acero dorado y plata 925.",
+    images: ["/logo.jpg"],
   },
   robots: {
     index: true,
