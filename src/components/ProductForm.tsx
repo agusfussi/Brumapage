@@ -14,18 +14,27 @@ type Product = {
   features: string | null;
   imageUrl: string | null;
   categoryId?: string | null;
+  subcategoryId?: string | null;
 };
 
 type Category = {
   id: string;
   name: string;
+  subcategories?: {
+    id: string;
+    name: string;
+  }[];
 };
 
 export function ProductForm({ product, categories = [] }: { product?: Product, categories?: Category[] }) {
   const isEditing = !!product?.id;
+  const [selectedCategory, setSelectedCategory] = useState<string>(product?.categoryId || "");
   const [previewImage, setPreviewImage] = useState<string | null>(product?.imageUrl || null);
   const [imageBase64, setImageBase64] = useState<string>("");
   const [isCompressing, setIsCompressing] = useState(false);
+
+  const currentCategory = categories.find((c) => c.id === selectedCategory);
+  const availableSubcategories = currentCategory?.subcategories || [];
   
   const action = isEditing 
     ? updateProductAction.bind(null, product.id!) 
@@ -151,18 +160,43 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1 text-[#26140b]">Categoría</label>
-          <select 
-            name="categoryId" 
-            defaultValue={product?.categoryId || ""} 
-            className="w-full border rounded p-2 bg-white focus:ring-1 focus:ring-[#26140b] outline-none"
-          >
-            <option value="">Sin categoría</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#26140b]">Categoría Principal</label>
+            <select 
+              name="categoryId" 
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full border rounded p-2 bg-white focus:ring-1 focus:ring-[#26140b] outline-none"
+            >
+              <option value="">Sin categoría</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#26140b]">
+              Subcategoría {availableSubcategories.length > 0 ? "(Opcional)" : ""}
+            </label>
+            {availableSubcategories.length > 0 ? (
+              <select 
+                name="subcategoryId" 
+                defaultValue={product?.subcategoryId || ""} 
+                className="w-full border rounded p-2 bg-white focus:ring-1 focus:ring-[#26140b] outline-none"
+              >
+                <option value="">General / Sin subcategoría</option>
+                {availableSubcategories.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="w-full border border-dashed rounded p-2 text-xs text-gray-400 bg-gray-50 flex items-center h-[38px]">
+                {selectedCategory ? "Esta categoría no tiene subcategorías" : "Seleccioná primero una categoría"}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Image Upload with Live Preview */}

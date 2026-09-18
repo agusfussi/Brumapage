@@ -69,12 +69,13 @@ export async function createProductAction(formData: FormData) {
 
   const features = (formData.get("features") as string)?.trim();
   const categoryId = (formData.get("categoryId") as string) || null;
+  const subcategoryId = (formData.get("subcategoryId") as string) || null;
   
   // Store image safely in cloud database as Data URL
   const imageUrl = await processImage(formData);
 
   await prisma.product.create({
-    data: { name, description, price, stock, features, imageUrl, categoryId },
+    data: { name, description, price, stock, features, imageUrl, categoryId, subcategoryId },
   });
 
   revalidatePath("/");
@@ -95,10 +96,11 @@ export async function updateProductAction(id: string, formData: FormData) {
 
   const features = (formData.get("features") as string)?.trim();
   const categoryId = (formData.get("categoryId") as string) || null;
+  const subcategoryId = (formData.get("subcategoryId") as string) || null;
   
   const newImageUrl = await processImage(formData);
 
-  const dataToUpdate: any = { name, description, price, stock, features, categoryId };
+  const dataToUpdate: any = { name, description, price, stock, features, categoryId, subcategoryId };
   if (newImageUrl) {
     dataToUpdate.imageUrl = newImageUrl;
   }

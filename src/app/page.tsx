@@ -17,11 +17,19 @@ export default async function Home() {
         },
         include: {
           category: true,
+          subcategory: true,
         },
       }),
       prisma.category.findMany({
         orderBy: {
           name: "asc",
+        },
+        include: {
+          subcategories: {
+            orderBy: {
+              name: "asc",
+            },
+          },
         },
       }),
     ]);

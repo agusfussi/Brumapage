@@ -9,10 +9,26 @@ export const dynamic = "force-dynamic";
 export default async function EditProductPage({ params }: { params: { id: string } }) {
   const { id } = await params;
   
-  const [product, categories] = await Promise.all([
-    prisma.product.findUnique({ where: { id } }),
-    prisma.category.findMany({ orderBy: { name: "asc" } })
-  ]);
+  let product = null;
+  let categories: any[] = [];
+
+  try {
+    const [fetchedProduct, fetchedCategories] = await Promise.all([
+      prisma.product.findUnique({ where: { id } }),
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        include: {
+          subcategories: {
+            orderBy: { name: "asc" },
+          },
+        },
+      }),
+    ]);
+    product = fetchedProduct;
+    categories = fetchedCategories;
+  } catch (e) {
+    console.error("Error loading product/categories for edit:", e);
+  }
 
   if (!product) {
     notFound();
@@ -21,7 +37,7 @@ export default async function EditProductPage({ params }: { params: { id: string
   return (
     <div>
       <div className="mb-6">
-        <Link href="/gestion-bruma-privado" className=" hover:opacity-80 flex items-center gap-2 w-fit">
+        <Link href="/gestion-bruma-privado" className="hover:opacity-80 flex items-center gap-2 w-fit">
           <ArrowLeft className="w-4 h-4" />
           Volver a productos
         </Link>
