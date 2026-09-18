@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -6,6 +7,27 @@ import { ProductPurchaseActions } from "@/components/ProductPurchaseActions";
 
 // Enable Incremental Static Regeneration
 export const revalidate = 60;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { name: true, description: true },
+    });
+    if (!product) return { title: "Producto no encontrado" };
+    return {
+      title: product.name,
+      description: product.description || `${product.name} - Joyas y Accesorios en Bruma.`,
+      openGraph: {
+        title: `${product.name} | Bruma`,
+        description: product.description || `${product.name} en Bruma | Joyas y Accesorios.`,
+      },
+    };
+  } catch {
+    return { title: "Producto" };
+  }
+}
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;

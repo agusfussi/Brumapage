@@ -24,8 +24,45 @@ const pinyonScript = Pinyon_Script({
 });
 
 export const metadata: Metadata = {
-  title: "Bruma | Catálogo",
-  description: "Catálogo de productos de Bruma",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://bruuma.netlify.app"),
+  title: {
+    default: "Bruma | Joyas y Accesorios",
+    template: "%s | Bruma",
+  },
+  description: "Tienda online de joyas y accesorios de moda en acero blanco, acero dorado y plata 925. Encontrá collares, pulseras, anillos y más.",
+  keywords: [
+    "Bruma",
+    "Bruma joyas",
+    "Bruma accesorios",
+    "joyas",
+    "accesorios de moda",
+    "acero blanco",
+    "acero dorado",
+    "plata 925",
+    "collares",
+    "pulseras",
+    "anillos",
+    "tienda online",
+  ],
+  authors: [{ name: "Bruma" }],
+  creator: "Bruma",
+  openGraph: {
+    title: "Bruma | Joyas y Accesorios",
+    description: "Tienda online de joyas y accesorios de moda en acero blanco, acero dorado y plata 925.",
+    url: "https://bruuma.netlify.app",
+    siteName: "Bruma",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bruma | Joyas y Accesorios",
+    description: "Tienda online de joyas y accesorios de moda en acero blanco, acero dorado y plata 925.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
