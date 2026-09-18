@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ProductPurchaseActions } from "@/components/ProductPurchaseActions";
 
-export const dynamic = "force-dynamic";
+// Enable Incremental Static Regeneration
+export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -18,6 +19,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   }
 
   const isNew = product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false;
+
+  const displayImageUrl = product.imageUrl
+    ? product.imageUrl.startsWith("data:")
+      ? `/api/products/${product.id}/image`
+      : product.imageUrl
+    : null;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -37,10 +44,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               Nuevo
             </span>
           ) : null}
-          {product.imageUrl ? (
+          {displayImageUrl ? (
             <img
-              src={product.imageUrl}
+              src={displayImageUrl}
               alt={product.name}
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -86,7 +95,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                 name: product.name,
                 price: product.price,
                 stock: product.stock,
-                imageUrl: product.imageUrl,
+                imageUrl: displayImageUrl,
               }}
             />
           </div>

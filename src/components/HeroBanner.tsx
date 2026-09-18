@@ -21,22 +21,27 @@ export function HeroBanner({ images }: HeroBannerProps) {
   }, [images.length]);
 
   const hasImages = images.length > 0;
+  // Limit to at most 4 images for performance
+  const bannerImages = images.slice(0, 4);
 
   return (
     <section className="h-72 md:h-96 w-full flex items-center justify-center relative overflow-hidden bg-[#f4f0eb]">
       {/* Blurred Carousel Background */}
       {hasImages ? (
         <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
-          {images.map((imgUrl, index) => (
+          {bannerImages.map((imgUrl, index) => (
             <div
               key={imgUrl + index}
               className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-                index === currentIndex ? "opacity-100" : "opacity-0"
+                index === currentIndex ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             >
               <img
                 src={imgUrl}
                 alt=""
+                fetchPriority={index === 0 ? "high" : "low"}
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding="async"
                 className="w-full h-full object-cover scale-105 blur-[6px] md:blur-[8px]"
               />
             </div>
