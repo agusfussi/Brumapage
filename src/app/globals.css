@@ -3,11 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #26140b; /* Chocolate negro / marrón muy oscuro, elegante y 100% legible */
+  --brand-primary: #26140b;
+  --brand-primary-hover: #3d2315;
+  --brand-surface: #f4f0eb;
+  --brand-surface-subtle: #fbf9f6;
+  --brand-muted: rgba(38, 20, 11, 0.7);
+  --brand-border: rgba(38, 20, 11, 0.15);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-surface-subtle: var(--brand-surface-subtle);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-border: var(--brand-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-pinyon: var(--font-pinyon);
