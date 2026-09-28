@@ -24,7 +24,14 @@ export default async function EditProductPage({ params }: { params: { id: string
         },
       }),
     ]);
-    product = fetchedProduct;
+    product = fetchedProduct
+      ? {
+          ...fetchedProduct,
+          imageUrl: fetchedProduct.imageUrl?.startsWith("data:")
+            ? `/api/products/${fetchedProduct.id}/image`
+            : fetchedProduct.imageUrl,
+        }
+      : null;
     categories = fetchedCategories;
   } catch (e) {
     console.error("Error loading product/categories for edit:", e);
