@@ -86,7 +86,7 @@ export function Footer() {
             <p className="text-[11px] text-[#26140b]/60 pt-1">
               Sitio web creado por{" "}
               <a
-                href="https://www.instagram.com/aguss_fussi/"
+                href="https://agusfussi.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium underline hover:text-[#26140b] transition-colors"
