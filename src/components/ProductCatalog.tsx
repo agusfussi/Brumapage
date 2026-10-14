@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
 import { Tag } from "lucide-react";
 
 interface Subcategory {
@@ -40,13 +41,25 @@ interface ProductCatalogProps {
   categories: Category[];
 }
 
+const INITIAL_VISIBLE_COUNT = 6;
+const LOAD_MORE_STEP = 6;
+
 export function ProductCatalog({ products, categories }: ProductCatalogProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string>("all");
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const handleCategoryChange = (catId: string) => {
     setSelectedCategoryId(catId);
     setSelectedSubcategoryId("all"); // Reset subcategory when switching main category
+    setVisibleCount(INITIAL_VISIBLE_COUNT); // Reset visible count to 6
+  };
+
+  const handleSubcategoryChange = (subId: string) => {
+    setSelectedSubcategoryId(subId);
+    setVisibleCount(INITIAL_VISIBLE_COUNT); // Reset visible count to 6
   };
 
   // Find active category and its subcategories
@@ -63,6 +76,43 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
     }
     return true;
   });
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProducts.length;
+
+  // Progressive scroll loading with IntersectionObserver
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsLoadingMore(true);
+          // Micro-delay of 200ms for smooth visual feedback
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + LOAD_MORE_STEP, filteredProducts.length));
+            setIsLoadingMore(false);
+          }, 200);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "250px", // Trigger 250px before reaching the sentinel
+        threshold: 0,
+      }
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [hasMore, isLoadingMore, filteredProducts.length]);
 
   return (
     <section className="container mx-auto px-4 py-12">
@@ -118,7 +168,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
 
               {/* Option: Todos en esta categoría */}
               <button
-                onClick={() => setSelectedSubcategoryId("all")}
+                onClick={() => handleSubcategoryChange("all")}
                 className={`px-3 py-1 rounded-full text-xs transition-all duration-150 whitespace-nowrap cursor-pointer font-medium ${
                   selectedSubcategoryId === "all"
                     ? "bg-[#26140b]/90 text-white shadow-xs"
@@ -138,7 +188,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => setSelectedSubcategoryId(sub.id)}
+                    onClick={() => handleSubcategoryChange(sub.id)}
                     className={`px-3 py-1 rounded-full text-xs transition-all duration-150 whitespace-nowrap cursor-pointer font-medium ${
                       isSelected
                         ? "bg-[#26140b]/90 text-white shadow-xs"
@@ -167,8 +217,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
           </p>
           <button
             onClick={() => {
-              setSelectedCategoryId("all");
-              setSelectedSubcategoryId("all");
+              handleCategoryChange("all");
             }}
             className="mt-4 text-xs font-bold underline text-[#26140b] hover:opacity-80 cursor-pointer"
           >
@@ -176,27 +225,56 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {filteredProducts.map((product) => {
-            const isNew = product.isNew !== undefined
-              ? product.isNew
-              : (product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false);
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            {visibleProducts.map((product) => {
+              const isNew = product.isNew !== undefined
+                ? product.isNew
+                : (product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false);
 
-            return (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                stock={product.stock}
-                imageUrl={product.imageUrl}
-                categoryName={product.category?.name}
-                subcategoryName={product.subcategory?.name}
-                isNew={isNew}
-              />
-            );
-          })}
-        </div>
+              return (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  stock={product.stock}
+                  imageUrl={product.imageUrl}
+                  categoryName={product.category?.name}
+                  subcategoryName={product.subcategory?.name}
+                  isNew={isNew}
+                />
+              );
+            })}
+
+            {/* Skeletons while progressively loading the next batch */}
+            {isLoadingMore && (
+              <>
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+              </>
+            )}
+          </div>
+
+          {/* Sentinel for progressive infinite scroll */}
+          {hasMore && (
+            <div ref={sentinelRef} className="w-full py-8 flex flex-col items-center justify-center gap-2">
+              <div className="flex items-center gap-2 text-xs text-[#26140b]/70">
+                <span className="w-2 h-2 rounded-full bg-[#26140b] animate-ping" />
+                <span>Cargando más productos...</span>
+              </div>
+            </div>
+          )}
+
+          {/* End of catalog indicator */}
+          {!hasMore && filteredProducts.length > INITIAL_VISIBLE_COUNT && (
+            <div className="text-center py-10 text-xs text-[#26140b]/60 flex items-center justify-center gap-3">
+              <span className="inline-block w-12 h-px bg-[#26140b]/20" />
+              <span>Has visto todos los productos ({filteredProducts.length})</span>
+              <span className="inline-block w-12 h-px bg-[#26140b]/20" />
+            </div>
+          )}
+        </>
       )}
     </section>
   );

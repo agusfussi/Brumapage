@@ -84,9 +84,16 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
-          setPreviewImage(compressedDataUrl);
-          setImageBase64(compressedDataUrl);
+          // Convert to ultra-light high-quality WebP format (0.85 quality)
+          let optimizedDataUrl = canvas.toDataURL("image/webp", 0.85);
+
+          // Fallback to JPEG if the browser engine doesn't support WebP canvas export
+          if (!optimizedDataUrl.startsWith("data:image/webp")) {
+            optimizedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          }
+
+          setPreviewImage(optimizedDataUrl);
+          setImageBase64(optimizedDataUrl);
         } else {
           const directDataUrl = readerEvent.target?.result as string;
           setPreviewImage(directDataUrl);
@@ -232,7 +239,7 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
                 />
               </label>
               <p className="text-xs text-[#26140b]/60 mt-1.5">
-                {isCompressing ? "Optimizando foto..." : "Formatos soportados: JPG, PNG, WEBP."}
+                {isCompressing ? "Convirtiendo y optimizando foto a WebP..." : "Formatos soportados: JPG, PNG, WEBP (se optimiza automáticamente a .webp ligero)."}
               </p>
             </div>
           </div>
