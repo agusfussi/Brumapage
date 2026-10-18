@@ -265,15 +265,6 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
               </div>
             </div>
           )}
-
-          {/* End of catalog indicator */}
-          {!hasMore && filteredProducts.length > INITIAL_VISIBLE_COUNT && (
-            <div className="text-center py-10 text-xs text-[#26140b]/60 flex items-center justify-center gap-3">
-              <span className="inline-block w-12 h-px bg-[#26140b]/20" />
-              <span>Has visto todos los productos ({filteredProducts.length})</span>
-              <span className="inline-block w-12 h-px bg-[#26140b]/20" />
-            </div>
-          )}
         </>
       )}
     </section>
