@@ -119,6 +119,9 @@ export async function createProductAction(formData: FormData) {
   // Ensure non-negative and bounded numbers
   const rawPrice = parseFloat(formData.get("price") as string);
   const price = isNaN(rawPrice) ? 0 : Math.min(100000000, Math.max(0, rawPrice));
+
+  const rawDiscount = parseInt(formData.get("discountPercentage") as string, 10);
+  const discountPercentage = isNaN(rawDiscount) ? 0 : Math.min(99, Math.max(0, rawDiscount));
   
   const rawStock = parseInt(formData.get("stock") as string, 10);
   const stock = isNaN(rawStock) ? 0 : Math.min(100000, Math.max(0, rawStock));
@@ -131,7 +134,7 @@ export async function createProductAction(formData: FormData) {
   const imageUrl = await processImage(formData);
 
   const product = await prisma.product.create({
-    data: { name, description, price, stock, features, imageUrl, categoryId, subcategoryId },
+    data: { name, description, price, discountPercentage, stock, features, imageUrl, categoryId, subcategoryId },
   });
 
   logger.info("PRODUCT_CREATED", `Product created: ${product.name} (${product.id})`);
@@ -155,6 +158,9 @@ export async function updateProductAction(id: string, formData: FormData) {
   // Ensure non-negative and bounded numbers
   const rawPrice = parseFloat(formData.get("price") as string);
   const price = isNaN(rawPrice) ? 0 : Math.min(100000000, Math.max(0, rawPrice));
+
+  const rawDiscount = parseInt(formData.get("discountPercentage") as string, 10);
+  const discountPercentage = isNaN(rawDiscount) ? 0 : Math.min(99, Math.max(0, rawDiscount));
   
   const rawStock = parseInt(formData.get("stock") as string, 10);
   const stock = isNaN(rawStock) ? 0 : Math.min(100000, Math.max(0, rawStock));
@@ -165,7 +171,7 @@ export async function updateProductAction(id: string, formData: FormData) {
   
   const newImageUrl = await processImage(formData);
 
-  const dataToUpdate: any = { name, description, price, stock, features, categoryId, subcategoryId };
+  const dataToUpdate: any = { name, description, price, discountPercentage, stock, features, categoryId, subcategoryId };
   if (newImageUrl) {
     dataToUpdate.imageUrl = newImageUrl;
   }
@@ -178,8 +184,28 @@ export async function updateProductAction(id: string, formData: FormData) {
   logger.info("PRODUCT_UPDATED", `Product updated: ${name} (${id})`);
 
   revalidatePath("/");
+  revalidatePath(`/product/${id}`);
   revalidatePath("/gestion-bruma-privado");
   redirect("/gestion-bruma-privado");
+}
+
+export async function updateProductDiscountAction(id: string, discountPercentage: number) {
+  await requireAdminSession();
+
+  const cleanDiscount = isNaN(discountPercentage)
+    ? 0
+    : Math.min(99, Math.max(0, Math.round(discountPercentage)));
+
+  await prisma.product.update({
+    where: { id },
+    data: { discountPercentage: cleanDiscount },
+  });
+
+  logger.info("PRODUCT_DISCOUNT_UPDATED", `Product discount updated (${id}): ${cleanDiscount}%`);
+
+  revalidatePath("/");
+  revalidatePath(`/product/${id}`);
+  revalidatePath("/gestion-bruma-privado");
 }
 
 export async function deleteProductAction(id: string) {

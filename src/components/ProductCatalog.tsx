@@ -20,6 +20,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  discountPercentage?: number | null;
   stock: number;
   imageUrl?: string | null;
   categoryId?: string | null;
@@ -66,8 +67,13 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
   const activeCategory = categories.find((c) => c.id === selectedCategoryId);
   const activeSubcategories = activeCategory?.subcategories || [];
 
+  const offersCount = products.filter((p) => (p.discountPercentage ?? 0) > 0).length;
+
   // Filter products based on selected category and subcategory
   const filteredProducts = products.filter((p) => {
+    if (selectedCategoryId === "offers") {
+      return (p.discountPercentage ?? 0) > 0;
+    }
     if (selectedCategoryId !== "all" && p.categoryId !== selectedCategoryId) {
       return false;
     }
@@ -122,7 +128,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
       </h2>
 
       {/* Main Categories Filter (Level 1) */}
-      {categories.length > 0 && (
+      {(categories.length > 0 || offersCount > 0) && (
         <div className="space-y-3 mb-8">
           <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2 no-scrollbar px-2">
             {/* Option: Todos */}
@@ -136,6 +142,20 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
             >
               Todos ({products.length})
             </button>
+
+            {/* Option: Ofertas (automatically shown when discounted products exist) */}
+            {offersCount > 0 && (
+              <button
+                onClick={() => handleCategoryChange("offers")}
+                className={`px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                  selectedCategoryId === "offers"
+                    ? "bg-[#26140b] text-white shadow-sm"
+                    : "bg-[#f4f0eb] text-[#26140b] border border-[#26140b]/30 hover:border-[#26140b]/60 hover:bg-[#26140b]/10"
+                }`}
+              >
+                Ofertas ({offersCount})
+              </button>
+            )}
 
             {/* Dynamic Main Categories */}
             {categories.map((cat) => {
@@ -159,7 +179,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
           </div>
 
           {/* Subcategories Filter (Level 2 - shown when active category has subcategories) */}
-          {selectedCategoryId !== "all" && activeSubcategories.length > 0 && (
+          {selectedCategoryId !== "all" && selectedCategoryId !== "offers" && activeSubcategories.length > 0 && (
             <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 no-scrollbar px-2 animate-in fade-in slide-in-from-top-1 duration-200">
               <span className="text-xs text-[#26140b]/60 flex items-center gap-1 mr-1 select-none font-medium">
                 <Tag className="w-3.5 h-3.5" />
@@ -238,6 +258,7 @@ export function ProductCatalog({ products, categories }: ProductCatalogProps) {
                   id={product.id}
                   name={product.name}
                   price={product.price}
+                  discountPercentage={product.discountPercentage}
                   stock={product.stock}
                   imageUrl={product.imageUrl}
                   categoryName={product.category?.name}

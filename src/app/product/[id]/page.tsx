@@ -41,6 +41,9 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   }
 
   const isNew = product.createdAt ? Date.now() - new Date(product.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000 : false;
+  const discount = product.discountPercentage && product.discountPercentage > 0 ? product.discountPercentage : 0;
+  const hasDiscount = discount > 0;
+  const finalPrice = hasDiscount ? Math.round(product.price * (1 - discount / 100)) : product.price;
 
   const displayImageUrl = product.imageUrl
     ? product.imageUrl.startsWith("data:")
@@ -61,6 +64,17 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             <span className="absolute top-3 left-3 z-10 bg-[#26140b]/80 backdrop-blur-sm text-white text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm select-none">
               Agotado
             </span>
+          ) : hasDiscount ? (
+            <>
+              <span className="absolute top-3 left-3 z-10 bg-[#26140b] text-white text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded shadow-sm select-none">
+                -{discount}% OFF
+              </span>
+              {isNew && (
+                <span className="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm text-[#26140b] text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm border border-[#26140b]/15 select-none">
+                  Nuevo
+                </span>
+              )}
+            </>
           ) : isNew ? (
             <span className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm text-[#26140b] text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded shadow-sm border border-[#26140b]/15 select-none">
               Nuevo
@@ -89,7 +103,16 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               </p>
             )}
             <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">{product.name}</h1>
-            <p className="text-2xl md:text-3xl font-bold mb-6">${product.price.toLocaleString("es-AR")}</p>
+            <div className="flex items-baseline gap-3 mb-6">
+              <p className="text-2xl md:text-3xl font-bold text-[#26140b]">
+                ${finalPrice.toLocaleString("es-AR")}
+              </p>
+              {hasDiscount && (
+                <span className="text-lg md:text-xl text-[#26140b]/45 line-through">
+                  ${product.price.toLocaleString("es-AR")}
+                </span>
+              )}
+            </div>
             
             <div className="border-t border-b py-6 mb-6 space-y-4">
               <div>
@@ -115,7 +138,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               product={{
                 id: product.id,
                 name: product.name,
-                price: product.price,
+                price: finalPrice,
                 stock: product.stock,
                 imageUrl: displayImageUrl,
               }}

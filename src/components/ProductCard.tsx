@@ -4,6 +4,7 @@ interface ProductProps {
   id: string;
   name: string;
   price: number;
+  discountPercentage?: number | null;
   stock?: number;
   imageUrl?: string | null;
   categoryName?: string | null;
@@ -15,6 +16,7 @@ export function ProductCard({
   id,
   name,
   price,
+  discountPercentage,
   stock,
   imageUrl,
   categoryName,
@@ -22,6 +24,9 @@ export function ProductCard({
   isNew,
 }: ProductProps) {
   const isOutOfStock = stock !== undefined && stock <= 0;
+  const discount = discountPercentage && discountPercentage > 0 ? discountPercentage : 0;
+  const hasDiscount = discount > 0;
+  const finalPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
 
   // Format category badge: "Acero Blanco • Collares" or just "Collares" or "Acero Blanco"
   const categoryLabel = categoryName && subcategoryName
@@ -31,11 +36,22 @@ export function ProductCard({
   return (
     <Link href={`/product/${id}`} className="group block focus:outline-none">
       <div className="aspect-[4/5] bg-brand-surface rounded-lg overflow-hidden mb-3 relative shadow-xs border border-brand-border/40">
-        {/* Subtle Status Badges */}
+        {/* Subtle Status Badges (Opción 1: Boutique Minimalista) */}
         {isOutOfStock ? (
           <span className="absolute top-2 left-2 z-10 bg-brand-primary/80 backdrop-blur-sm text-white text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded shadow-xs select-none">
             Agotado
           </span>
+        ) : hasDiscount ? (
+          <>
+            <span className="absolute top-2 left-2 z-10 bg-brand-primary text-white text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded shadow-xs select-none">
+              -{discount}% OFF
+            </span>
+            {isNew && (
+              <span className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-sm text-brand-primary text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded shadow-xs border border-brand-border select-none">
+                Nuevo
+              </span>
+            )}
+          </>
         ) : isNew ? (
           <span className="absolute top-2 left-2 z-10 bg-white/95 backdrop-blur-sm text-brand-primary text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded shadow-xs border border-brand-border select-none">
             Nuevo
@@ -65,9 +81,16 @@ export function ProductCard({
       <h3 className="font-semibold text-sm text-brand-primary line-clamp-1 group-hover:opacity-80 transition-opacity">
         {name}
       </h3>
-      <p className="font-bold mt-1 text-base text-brand-primary">
-        ${price.toLocaleString("es-AR")}
-      </p>
+      <div className="mt-1 flex items-baseline gap-2">
+        <span className="font-bold text-base text-brand-primary">
+          ${finalPrice.toLocaleString("es-AR")}
+        </span>
+        {hasDiscount && (
+          <span className="text-xs text-brand-muted/60 line-through">
+            ${price.toLocaleString("es-AR")}
+          </span>
+        )}
+      </div>
     </Link>
   );
 }

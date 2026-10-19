@@ -10,6 +10,7 @@ type Product = {
   name: string;
   description: string;
   price: number;
+  discountPercentage?: number | null;
   stock: number;
   features: string | null;
   imageUrl: string | null;
@@ -26,12 +27,60 @@ type Category = {
   }[];
 };
 
+const QUICK_DISCOUNTS = [0, 10, 15, 20, 25, 30, 50];
+
 export function ProductForm({ product, categories = [] }: { product?: Product, categories?: Category[] }) {
   const isEditing = !!product?.id;
   const [selectedCategory, setSelectedCategory] = useState<string>(product?.categoryId || "");
   const [previewImage, setPreviewImage] = useState<string | null>(product?.imageUrl || null);
   const [imageBase64, setImageBase64] = useState<string>("");
   const [isCompressing, setIsCompressing] = useState(false);
+
+  const initialPrice = product?.price ?? 0;
+  const initialDiscount = product?.discountPercentage ?? 0;
+
+  const [basePriceStr, setBasePriceStr] = useState<string>(product?.price !== undefined ? String(product.price) : "");
+  const [discountPct, setDiscountPct] = useState<number>(initialDiscount);
+  const [promoPriceStr, setPromoPriceStr] = useState<string>(
+    initialPrice > 0 && initialDiscount > 0
+      ? String(Math.round(initialPrice * (1 - initialDiscount / 100)))
+      : ""
+  );
+
+  const numericBasePrice = parseFloat(basePriceStr) || 0;
+  const finalCalculatedPrice =
+    discountPct > 0 ? Math.round(numericBasePrice * (1 - discountPct / 100)) : numericBasePrice;
+
+  const handleBasePriceChange = (val: string) => {
+    setBasePriceStr(val);
+    const num = parseFloat(val) || 0;
+    if (discountPct > 0 && num > 0) {
+      setPromoPriceStr(String(Math.round(num * (1 - discountPct / 100))));
+    } else {
+      setPromoPriceStr("");
+    }
+  };
+
+  const handleDiscountPctChange = (pct: number) => {
+    const clamped = isNaN(pct) ? 0 : Math.min(99, Math.max(0, Math.round(pct)));
+    setDiscountPct(clamped);
+    if (clamped > 0 && numericBasePrice > 0) {
+      setPromoPriceStr(String(Math.round(numericBasePrice * (1 - clamped / 100))));
+    } else {
+      setPromoPriceStr("");
+    }
+  };
+
+  const handlePromoPriceChange = (val: string) => {
+    setPromoPriceStr(val);
+    const promo = parseFloat(val);
+    if (!val || isNaN(promo) || numericBasePrice <= 0 || promo >= numericBasePrice) {
+      setDiscountPct(0);
+      return;
+    }
+    const calculatedPct = Math.round((1 - promo / numericBasePrice) * 100);
+    setDiscountPct(Math.min(99, Math.max(1, calculatedPct)));
+  };
 
   const currentCategory = categories.find((c) => c.id === selectedCategory);
   const availableSubcategories = currentCategory?.subcategories || [];
@@ -45,6 +94,7 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
     if (imageBase64) {
       formData.set("imageBase64", imageBase64);
     }
+    formData.set("discountPercentage", String(discountPct));
     await action(formData);
     return null;
   }, null);
@@ -109,6 +159,7 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
   return (
     <form action={formAction} className="bg-white p-6 rounded-lg shadow max-w-2xl border border-gray-100" encType="multipart/form-data">
       <input type="hidden" name="imageBase64" value={imageBase64} />
+      <input type="hidden" name="discountPercentage" value={discountPct} />
 
       <div className="space-y-4">
         <div>
@@ -137,13 +188,14 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-[#26140b]">Precio ($)</label>
+            <label className="block text-sm font-medium mb-1 text-[#26140b]">Precio Normal ($)</label>
             <input 
               type="number" 
               step="0.01"
               min="0"
               name="price" 
-              defaultValue={product?.price ?? ""} 
+              value={basePriceStr}
+              onChange={(e) => handleBasePriceChange(e.target.value)}
               required 
               className="w-full border rounded p-2 focus:ring-1 focus:ring-[#26140b] outline-none" 
               placeholder="0.00"
@@ -164,6 +216,88 @@ export function ProductForm({ product, categories = [] }: { product?: Product, c
             <p className="text-[11px] text-[#26140b]/60 mt-1">
               Debe ser un número mayor o igual a 0.
             </p>
+          </div>
+        </div>
+
+        {/* Forma C: Bloque Híbrido de Descuento (Porcentaje + Precio en Oferta en vivo) */}
+        <div className="p-4 rounded-lg bg-[#fbf9f6] border border-[#26140b]/15 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <label className="block text-sm font-semibold text-[#26140b]">
+                Oferta / Descuento (Opcional)
+              </label>
+              <p className="text-xs text-[#26140b]/65">
+                Elegí un porcentaje o escribí el precio final deseado y se calcula solo.
+              </p>
+            </div>
+            {discountPct > 0 && numericBasePrice > 0 && (
+              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-[#26140b]/15 shadow-2xs">
+                <span className="bg-[#26140b] text-white text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded">
+                  -{discountPct}% OFF
+                </span>
+                <span className="font-bold text-sm text-[#26140b]">
+                  ${finalCalculatedPrice.toLocaleString("es-AR")}
+                </span>
+                <span className="text-xs text-[#26140b]/45 line-through">
+                  ${numericBasePrice.toLocaleString("es-AR")}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Botones rápidos de porcentaje */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {QUICK_DISCOUNTS.map((pct) => {
+              const isSelected = discountPct === pct;
+              return (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => handleDiscountPctChange(pct)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#26140b] text-white shadow-2xs"
+                      : "bg-white text-[#26140b] border border-[#26140b]/20 hover:bg-[#26140b]/5"
+                  }`}
+                >
+                  {pct === 0 ? "Sin descuento" : `${pct}% OFF`}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="block text-xs font-medium mb-1 text-[#26140b]/80">
+                Porcentaje de Descuento (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                step="1"
+                value={discountPct || ""}
+                onChange={(e) => handleDiscountPctChange(parseInt(e.target.value, 10) || 0)}
+                placeholder="0%"
+                className="w-full border rounded p-2 bg-white text-sm focus:ring-1 focus:ring-[#26140b] outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium mb-1 text-[#26140b]/80">
+                Precio Final en Oferta ($)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={promoPriceStr}
+                onChange={(e) => handlePromoPriceChange(e.target.value)}
+                disabled={numericBasePrice <= 0}
+                placeholder={numericBasePrice > 0 ? String(numericBasePrice) : "Ingresá primero el precio normal"}
+                className="w-full border rounded p-2 bg-white text-sm focus:ring-1 focus:ring-[#26140b] outline-none disabled:bg-gray-100 disabled:text-gray-400"
+              />
+            </div>
           </div>
         </div>
 

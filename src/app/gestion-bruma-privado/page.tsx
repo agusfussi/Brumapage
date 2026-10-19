@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Plus, Edit } from "lucide-react";
 import { DeleteProductButton } from "@/components/DeleteProductButton";
+import { QuickDiscountButton } from "@/components/QuickDiscountButton";
 
 export const dynamic = "force-dynamic";
 
@@ -36,14 +37,14 @@ export default async function AdminDashboard() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow-xs overflow-hidden border border-gray-200">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-200">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b text-xs uppercase tracking-wider text-gray-800 font-bold">
               <th className="p-4">Foto</th>
               <th className="p-4">Nombre</th>
               <th className="p-4">Categoría</th>
-              <th className="p-4">Precio</th>
+              <th className="p-4">Precio / Oferta</th>
               <th className="p-4">Stock</th>
               <th className="p-4 text-right">Acciones</th>
             </tr>
@@ -79,7 +80,13 @@ export default async function AdminDashboard() {
                   <td className="p-4 text-[#26140b]/80">
                     {product.category?.name || <span className="text-gray-400 italic">Sin categoría</span>}
                   </td>
-                  <td className="p-4 font-bold text-[#26140b]">${product.price.toLocaleString("es-AR")}</td>
+                  <td className="p-4">
+                    <QuickDiscountButton
+                      productId={product.id}
+                      price={product.price}
+                      discountPercentage={product.discountPercentage ?? 0}
+                    />
+                  </td>
                   <td className="p-4">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
                       product.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"

@@ -27,17 +27,18 @@ model Subcategory {
 }
 
 model Product {
-  id            String       @id @default(cuid())
-  name          String
-  description   String
-  price         Float
-  stock         Int          @default(0)
-  features      String?
-  imageUrl      String?
-  categoryId    String?
-  category      Category?    @relation(fields: [categoryId], references: [id])
-  subcategoryId String?
-  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                 String       @id @default(cuid())
+  name               String
+  description        String
+  price              Float
+  discountPercentage Int          @default(0)
+  stock              Int          @default(0)
+  features           String?
+  imageUrl           String?
+  categoryId         String?
+  category           Category?    @relation(fields: [categoryId], references: [id])
+  subcategoryId      String?
+  subcategory        Subcategory? @relation(fields: [subcategoryId], references: [id])
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
